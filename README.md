@@ -19,3 +19,7 @@ The AARS Ontology defines the core classes, properties, and metadata structures 
 
 ```turtle
 @prefix aars: [https://schema.obquan.com/aars/v1#](https://schema.obquan.com/aars/v1#) .
+
+## Licensing Note
+
+The aars Folder and all of its contents are covered under the LICENSE-ONTOLOGY. Every thing else is managed under the terms in LICENSE
