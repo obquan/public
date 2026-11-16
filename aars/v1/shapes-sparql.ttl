@@ -1,0 +1,47 @@
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix aars:  <https://schema.obquan.com/aars/v1#> .
+@prefix aarsh: <https://schema.obquan.com/aars/v1/shapes#> .
+@prefix airo:  <https://w3id.org/airo#> .
+@prefix airo_uc: <https://w3id.org/AIRO#> .
+@prefix eu-aiact: <https://w3id.org/dpv/legal/eu/aiact#> .
+@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+<https://schema.obquan.com/aars/v1/shapes/sparql> a owl:Ontology ;
+    owl:versionInfo "0.2.0" ;
+    rdfs:comment "W3C SHACL-AF / SPARQL rules and constraints for AARS risk tier derivation and declared-vs-derived consistency checks."@en ;
+    sh:declare
+      [ sh:prefix "aars" ; sh:namespace "https://schema.obquan.com/aars/v1#"^^xsd:anyURI ] ,
+      [ sh:prefix "airo" ; sh:namespace "https://w3id.org/airo#"^^xsd:anyURI ] ,
+      [ sh:prefix "airo_uc" ; sh:namespace "https://w3id.org/AIRO#"^^xsd:anyURI ] ,
+      [ sh:prefix "eu-aiact" ; sh:namespace "https://w3id.org/dpv/legal/eu/aiact#"^^xsd:anyURI ] ,
+      [ sh:prefix "skos" ; sh:namespace "http://www.w3.org/2004/02/skos/core#"^^xsd:anyURI ] ,
+      [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] .
+
+# ---------------- Derivation Rule (SHACL-AF) ----------------
+aarsh:DeriveRiskTier a sh:NodeShape ;
+    sh:targetObjectsOf aars:euAiAct ;
+    sh:rule [ a sh:SPARQLRule ;
+        sh:prefixes <https://schema.obquan.com/aars/v1/shapes/sparql> ;
+        sh:construct """
+            CONSTRUCT { $this aars:derivedRiskTier eu-aiact:RiskLevelHigh ; aars:derivedAnnexIIIArea ?area . }
+            WHERE {
+              ?agent aars:euAiAct $this ; aars:realizes/airo:hasPurpose ?purpose .
+              ?purpose a/rdfs:subClassOf* ?base .
+              ?m a aars:AnnexIIIMapping ; aars:matchesPurposeClass ?base ; aars:impliesArea ?area .
+            }""" ] .
+
+# ---------------- Declared vs Derived Consistency Constraint (SPARQL) ----------------
+aarsh:RiskTierConsistencyShape a sh:NodeShape ;
+    sh:targetObjectsOf aars:euAiAct ;
+    sh:sparql [ a sh:SPARQLConstraint ; sh:severity sh:Violation ;
+        sh:message "Declared tier {?declared} does not match derived tier from system profile ({?derived})."@en ;
+        sh:prefixes <https://schema.obquan.com/aars/v1/shapes/sparql> ;
+        sh:select """
+            SELECT $this ?declared ?derived WHERE {
+              $this aars:declaredRiskTier ?declared ; aars:derivedRiskTier ?derived .
+              FILTER NOT EXISTS { ?declared (skos:exactMatch|^skos:exactMatch)* ?derived }
+            }""" ] .
+

@@ -1,0 +1,360 @@
+@prefix aars:    <https://schema.obquan.com/aars/v1#> .
+@prefix airo:    <https://w3id.org/AIRO#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov:    <http://www.w3.org/ns/prov#> .
+@prefix vc:      <https://www.w3.org/2018/credentials#> .
+@prefix dpv:     <https://w3id.org/dpv#> .
+@prefix dpv-gdpr:<https://w3id.org/dpv/dpv-gdpr#> .
+@prefix dpv-ai:  <https://w3id.org/dpv/dpv-ai#> .
+@prefix eu-aiact:<https://w3id.org/dpv/legal/eu/aiact#> .
+@prefix vair:    <https://w3id.org/vair#> .
+
+<https://schema.obquan.com/aars/v1> a owl:Ontology ;
+    dcterms:title "AARS Application Profile Ontology"@en ;
+    owl:versionInfo "0.2.3-draft" ;
+    rdfs:comment "Application profile composing AIRO, VAIR, DPV, PROV-O, VC and SKOS. Reuses established vocabularies per ADR 0006."@en .
+
+# ---------------------------------------------------------------
+# Identity and registration
+# ---------------------------------------------------------------
+aars:Agent a owl:Class ;
+    rdfs:subClassOf prov:Agent ;
+    rdfs:label "Agent"@en ;
+    rdfs:comment "A DID-identified runtime agent. May realize an AI system; it is not itself the regulated system."@en .
+
+aars:Registration a owl:Class ;
+    rdfs:subClassOf prov:Entity ;
+    rdfs:label "Registration"@en ;
+    rdfs:comment "Time-bounded registry record about one Agent. Minted by the registry on acceptance."@en .
+
+aars:realizes a owl:ObjectProperty ;
+    rdfs:domain aars:Agent ; rdfs:range airo:AISystem .
+
+aars:registers a owl:ObjectProperty ;
+    rdfs:domain aars:Registration ; rdfs:range aars:Agent .
+
+# Time and lineage use PROV-O instead of AARS terms:
+#   prov:generatedAtTime   = when this version was recorded
+#   prov:invalidatedAtTime = when it was superseded
+#   prov:wasRevisionOf     = the previous version
+aars:versionIndex a owl:DatatypeProperty ; rdfs:domain aars:Registration ; rdfs:range xsd:positiveInteger .
+aars:payloadDigest a owl:ObjectProperty ; rdfs:domain aars:Registration ; rdfs:range aars:PayloadDigest .
+aars:status     a owl:ObjectProperty   ; rdfs:domain aars:Registration ; rdfs:range aars:RegistrationStatus .
+
+aars:RegistrationStatus a owl:Class .
+aars:Active   a aars:RegistrationStatus .
+aars:Inactive a aars:RegistrationStatus .
+aars:Revoked  a aars:RegistrationStatus .
+
+aars:provider a owl:ObjectProperty ;
+    rdfs:domain aars:Agent ; rdfs:range prov:Agent ;
+    rdfs:comment "The organization or team responsible as provider (current owning_team)."@en .
+aars:deployer a owl:ObjectProperty ;
+    rdfs:domain aars:Agent ; rdfs:range prov:Agent ;
+    rdfs:comment "The party operating the agent under its own authority, when different from the provider."@en .
+
+aars:OwnershipAttestation a owl:Class ;
+    rdfs:subClassOf vc:VerifiableCredential ;
+    rdfs:comment "Credential by the provider's DID asserting ownership of the agent DID."@en .
+aars:ownershipAttestation a owl:ObjectProperty ;
+    rdfs:domain aars:Agent ; rdfs:range aars:OwnershipAttestation .
+
+aars:contactEmail a owl:DatatypeProperty ; rdfs:range xsd:string .
+aars:apiEndpoint       a owl:ObjectProperty ; rdfs:domain aars:Agent .
+aars:websocketEndpoint a owl:ObjectProperty ; rdfs:domain aars:Agent .
+
+# ---------------------------------------------------------------
+# Intent and operating constraints
+# ---------------------------------------------------------------
+aars:Intent a owl:Class ;
+    rdfs:comment "Declared mission, capabilities and operating limits of an agent."@en .
+aars:hasIntent a owl:ObjectProperty ; rdfs:domain aars:Agent ; rdfs:range aars:Intent .
+aars:goalStatement a owl:DatatypeProperty ; rdfs:domain aars:Intent ; rdfs:range xsd:string .
+
+aars:capability a rdf:Property ;
+    rdfs:domain aars:Intent ;
+    rdfs:comment "Literal today. Intended to become skos:Concept values once a capability scheme is chosen (open decision)."@en .
+
+aars:OperatingConstraints a owl:Class .
+aars:hasConstraints a owl:ObjectProperty ; rdfs:domain aars:Intent ; rdfs:range aars:OperatingConstraints .
+aars:maxSpend          a owl:DatatypeProperty ; rdfs:domain aars:OperatingConstraints ; rdfs:range xsd:decimal .
+aars:currency          a owl:DatatypeProperty ; rdfs:domain aars:OperatingConstraints ; rdfs:range xsd:string .
+aars:authorityExpires  a owl:DatatypeProperty ; rdfs:domain aars:OperatingConstraints ; rdfs:range xsd:dateTime .
+aars:allowedGeography  a owl:DatatypeProperty ; rdfs:domain aars:OperatingConstraints ; rdfs:range xsd:string .
+aars:forbiddenTool     a owl:DatatypeProperty ; rdfs:domain aars:OperatingConstraints ; rdfs:range xsd:string .
+aars:maxStepsPerTask   a owl:DatatypeProperty ; rdfs:domain aars:OperatingConstraints ; rdfs:range xsd:integer .
+aars:maxExecutionSeconds a owl:DatatypeProperty ; rdfs:domain aars:OperatingConstraints ; rdfs:range xsd:integer .
+aars:maxInputTier      a owl:DatatypeProperty ; rdfs:domain aars:OperatingConstraints ; rdfs:range xsd:string .
+aars:maxOutputTier     a owl:DatatypeProperty ; rdfs:domain aars:OperatingConstraints ; rdfs:range xsd:string .
+
+# ---------------------------------------------------------------
+# Data protection and privacy (W3C DPV & VAIR alignment per ADR 0006)
+# ---------------------------------------------------------------
+dpv:Data a owl:Class .
+dpv:PersonalData a owl:Class ; rdfs:subClassOf dpv:Data .
+dpv:SpecialCategoryData a owl:Class ; rdfs:subClassOf dpv:PersonalData .
+dpv:LegalBasis a owl:Class .
+dpv:Purpose a owl:Class .
+vair:Risk a owl:Class .
+
+aars:dataBoundary a owl:ObjectProperty ;
+    rdfs:domain aars:OperatingConstraints ;
+    rdfs:comment "Permitted or prohibited data categories under W3C DPV."@en .
+
+aars:permittedDataCategory a owl:ObjectProperty ;
+    rdfs:domain aars:OperatingConstraints ;
+    rdfs:range dpv:Data ;
+    rdfs:comment "Allowed DPV data categories."@en .
+
+aars:prohibitedDataCategory a owl:ObjectProperty ;
+    rdfs:domain aars:OperatingConstraints ;
+    rdfs:range dpv:Data ;
+    rdfs:comment "Prohibited DPV data categories."@en .
+
+aars:lawfulBasis a owl:ObjectProperty ;
+    rdfs:domain aars:OperatingConstraints ;
+    rdfs:range dpv:LegalBasis ;
+    rdfs:comment "Data Controller lawful basis inherited under GDPR Article 6/9."@en .
+
+aars:dataCategory a owl:ObjectProperty ;
+    rdfs:range dpv:Data ;
+    rdfs:comment "DPV data category tag on hop or tool output."@en .
+aars:onBreach          a owl:ObjectProperty   ; rdfs:domain aars:OperatingConstraints ; rdfs:range aars:BreachBehavior .
+aars:compensatingAction a owl:ObjectProperty  ; rdfs:domain aars:OperatingConstraints .
+
+aars:CapabilityEnvelope a owl:Class .
+aars:capabilityEnvelope a owl:ObjectProperty ; rdfs:domain aars:Intent ; rdfs:range aars:CapabilityEnvelope .
+aars:permittedMcpServer a owl:ObjectProperty ; rdfs:domain aars:CapabilityEnvelope ; rdfs:range aars:McpServerGrant .
+aars:McpServerGrant a owl:Class .
+aars:serverId    a owl:DatatypeProperty ; rdfs:domain aars:McpServerGrant ; rdfs:range xsd:string .
+aars:allowedTool a owl:DatatypeProperty ; rdfs:domain aars:McpServerGrant ; rdfs:range xsd:string .
+aars:mayDelegateTo a owl:ObjectProperty ; rdfs:domain aars:CapabilityEnvelope ; rdfs:range aars:Agent .
+aars:egressAllowed a owl:DatatypeProperty ; rdfs:domain aars:CapabilityEnvelope ; rdfs:range xsd:string .
+
+aars:producesSyntheticContent a owl:DatatypeProperty ; rdfs:domain aars:Intent ; rdfs:range xsd:boolean .
+aars:markingMethod a owl:ObjectProperty ; rdfs:domain aars:Intent ; rdfs:range skos:Concept .
+
+# ---------------------------------------------------------------
+# Compliance (AIRO-aligned)
+# ---------------------------------------------------------------
+aars:EuAiActDeclaration a owl:Class .
+# aars:hasCompliance is only needed if the compliance block becomes its own node.
+# The JSON-LD context nests it away, so it is optional and can be dropped.
+aars:hasCompliance a owl:ObjectProperty ; rdfs:domain aars:Agent .
+aars:euAiAct       a owl:ObjectProperty ; rdfs:range aars:EuAiActDeclaration .
+aars:euAiRegId     a owl:DatatypeProperty ; rdfs:domain aars:EuAiActDeclaration ; rdfs:range xsd:string .
+aars:declaredRiskTier a owl:ObjectProperty ; rdfs:domain aars:EuAiActDeclaration ;
+    rdfs:range eu-aiact:RiskLevel ;
+    rdfs:subPropertyOf dpv:hasRiskLevel ;
+    rdfs:comment "Asserted risk tier, referencing canonical concepts from dpv-legal:eu-aiact per arXiv:2610.31380 and ADR 0007."@en .
+aars:derivedRiskTier  a owl:ObjectProperty ;
+    rdfs:range eu-aiact:RiskLevel ;
+    rdfs:subPropertyOf dpv:hasRiskLevel ;
+    rdfs:comment "Computed by the registry from the realized AISystem profile against Annex III SHACL rules. Never accepted from a registrant."@en .
+aars:highRiskArea a owl:ObjectProperty ; rdfs:domain aars:EuAiActDeclaration ; rdfs:range skos:Concept .
+aars:derivedAnnexIIIArea a owl:ObjectProperty ; rdfs:range skos:Concept .
+aars:minTrustThreshold a owl:DatatypeProperty ; rdfs:domain aars:Agent ; rdfs:range xsd:decimal .
+aars:attestedStandard  a owl:ObjectProperty ; rdfs:domain aars:Agent ; rdfs:range skos:Concept .
+
+aars:HumanOversightAttestation a owl:Class ;
+    rdfs:subClassOf vc:VerifiableCredential .
+aars:humanOversight a owl:ObjectProperty ; rdfs:domain aars:EuAiActDeclaration ; rdfs:range aars:HumanOversightAttestation .
+aars:oversightMethod a owl:DatatypeProperty ; rdfs:domain aars:HumanOversightAttestation ; rdfs:range xsd:string .
+aars:supervisor a owl:ObjectProperty ; rdfs:domain aars:HumanOversightAttestation ; rdfs:range prov:Agent .
+aars:attestsMeasure a owl:ObjectProperty ; rdfs:domain aars:HumanOversightAttestation ; rdfs:range airo:HumanOversightMeasure .
+
+aars:C2paDeclaration a owl:Class .
+aars:c2paDeclaration a owl:ObjectProperty ; rdfs:domain aars:EuAiActDeclaration ; rdfs:range aars:C2paDeclaration .
+aars:c2paSupported a owl:DatatypeProperty ; rdfs:domain aars:C2paDeclaration ; rdfs:range xsd:boolean .
+aars:watermarkingAlgorithm a owl:DatatypeProperty ; rdfs:domain aars:C2paDeclaration ; rdfs:range xsd:string .
+aars:manifestBindingMethod a owl:DatatypeProperty ; rdfs:domain aars:C2paDeclaration ; rdfs:range xsd:string .
+
+aars:KillSwitch a owl:Class ;
+    rdfs:subClassOf airo:Control ;
+    rdfs:comment "Control satisfying the EU AI Act stop requirement; active revocation via endpoint, passive via DID state."@en .
+aars:killSwitch a owl:ObjectProperty ; rdfs:domain aars:EuAiActDeclaration ; rdfs:range aars:KillSwitch .
+aars:revocationEndpoint a owl:ObjectProperty ; rdfs:domain aars:KillSwitch .
+aars:killSwitchSupported a owl:DatatypeProperty ; rdfs:domain aars:KillSwitch ; rdfs:range xsd:boolean .
+
+# ---------------------------------------------------------------
+# Concept schemes & DPVCG EU AI Act Risk Levels (arXiv:2610.31380 / ADR 0007)
+# ---------------------------------------------------------------
+# aars:RiskTierScheme and fictional terms (airo:HighRisk, airo:LimitedRisk)
+# are deprecated and superseded by canonical concepts from https://w3id.org/dpv/legal/eu/aiact#:
+#   - eu-aiact:RiskLevelProhibited (Article 5)
+#   - eu-aiact:RiskLevelHigh (Article 6 / Annex III)
+#   - eu-aiact:RiskLevelTransparencyRequired (Article 50)
+#   - eu-aiact:RiskLevelMinimal
+
+eu-aiact:RiskLevel a owl:Class ;
+    rdfs:subClassOf dpv:RiskLevel .
+eu-aiact:RiskLevelProhibited a eu-aiact:RiskLevel, skos:Concept ;
+    skos:prefLabel "Prohibited Risk (EU AI Act Art. 5)"@en .
+eu-aiact:RiskLevelHigh a eu-aiact:RiskLevel, skos:Concept ;
+    skos:prefLabel "High Risk (EU AI Act Art. 6 / Annex III)"@en .
+eu-aiact:RiskLevelTransparencyRequired a eu-aiact:RiskLevel, skos:Concept ;
+    skos:prefLabel "Transparency Required / Limited Risk (EU AI Act Art. 50)"@en .
+eu-aiact:RiskLevelMinimal a eu-aiact:RiskLevel, skos:Concept ;
+    skos:prefLabel "Minimal Risk (EU AI Act)"@en .
+
+aars:AnnexIIIAreaScheme a skos:ConceptScheme .
+aars:Biometrics a skos:Concept ; skos:inScheme aars:AnnexIIIAreaScheme .
+aars:CriticalInfrastructure a skos:Concept ; skos:inScheme aars:AnnexIIIAreaScheme .
+aars:EducationAndVocationalTraining a skos:Concept ; skos:inScheme aars:AnnexIIIAreaScheme .
+aars:EmploymentAndWorkersManagement a skos:Concept ; skos:inScheme aars:AnnexIIIAreaScheme .
+aars:AccessToEssentialServices a skos:Concept ; skos:inScheme aars:AnnexIIIAreaScheme .
+aars:LawEnforcement a skos:Concept ; skos:inScheme aars:AnnexIIIAreaScheme .
+aars:MigrationAsylumBorderControl a skos:Concept ; skos:inScheme aars:AnnexIIIAreaScheme .
+aars:AdministrationOfJusticeAndDemocraticProcesses a skos:Concept ; skos:inScheme aars:AnnexIIIAreaScheme .
+
+# SPECIFICATION.md 4.5 names these three areas as airo: terms. TODO verify they exist in AIRO.
+aars:Biometrics skos:exactMatch airo:Biometrics .
+aars:EmploymentAndWorkersManagement skos:exactMatch airo:EmploymentAndWorkersManagement .
+aars:CriticalInfrastructure skos:exactMatch airo:CriticalInfrastructure .
+
+aars:BreachBehavior a owl:Class .
+aars:FailClosed         a aars:BreachBehavior .
+aars:DegradeToReadOnly  a aars:BreachBehavior .
+aars:IsolateAndPage     a aars:BreachBehavior .
+
+aars:MarkingMethodScheme a skos:ConceptScheme .
+aars:C2paContentCredential  a skos:Concept ; skos:inScheme aars:MarkingMethodScheme .
+aars:StatisticalWatermark   a skos:Concept ; skos:inScheme aars:MarkingMethodScheme .
+aars:RdfMetadataSidecar     a skos:Concept ; skos:inScheme aars:MarkingMethodScheme .
+
+aars:StandardScheme a skos:ConceptScheme .
+aars:GDPR a skos:Concept ; skos:inScheme aars:StandardScheme .
+aars:HIPAA a skos:Concept ; skos:inScheme aars:StandardScheme .
+aars:SOC2TypeII a skos:Concept ; skos:inScheme aars:StandardScheme .
+aars:ISO27001 a skos:Concept ; skos:inScheme aars:StandardScheme .
+aars:COPPA a skos:Concept ; skos:inScheme aars:StandardScheme .
+
+# ---------------------------------------------------------------
+# Mapping from AIRO system profile to Annex III areas (data, not code)
+# ---------------------------------------------------------------
+aars:AnnexIIIMapping a owl:Class ;
+    rdfs:comment "One rule: a system purpose class implies an Annex III area. Used to derive the risk tier."@en .
+aars:matchesPurposeClass a owl:ObjectProperty ; rdfs:domain aars:AnnexIIIMapping .
+aars:impliesArea a owl:ObjectProperty ; rdfs:domain aars:AnnexIIIMapping ; rdfs:range skos:Concept .
+
+aars:Mapping-Biometric a aars:AnnexIIIMapping ;
+    aars:matchesPurposeClass airo:BiometricIdentification ;   # class named in the AIRO paper
+    aars:impliesArea aars:Biometrics ;
+    rdfs:comment "Annex III point 1 (biometrics)."@en .
+aars:Mapping-Reoffending a aars:AnnexIIIMapping ;
+    aars:matchesPurposeClass airo:AssessingRiskOfReoffending ; # class named in the AIRO paper
+    aars:impliesArea aars:LawEnforcement ;
+    rdfs:comment "Annex III point 6 (law enforcement). Annex numbering in the paper follows the 2021 proposal; confirm against Regulation (EU) 2024/1689."@en .
+
+# ---------------------------------------------------------------
+# Provenance, traces and delegation
+# ---------------------------------------------------------------
+aars:CallChainTrace a owl:Class ; rdfs:subClassOf prov:Bundle .
+aars:Hop a owl:Class ; rdfs:subClassOf prov:Activity .
+aars:PayloadDigest a owl:Class ; rdfs:subClassOf prov:Entity ;
+    rdfs:comment "A canonicalized payload identified by its digest. Carries the digest and the canonicalization method used."@en .
+
+aars:hop a owl:ObjectProperty ; rdfs:domain aars:CallChainTrace ; rdfs:range aars:Hop .
+aars:hopIndex a owl:DatatypeProperty ; rdfs:domain aars:Hop ; rdfs:range xsd:integer .
+aars:dispatchedAt a owl:DatatypeProperty ; rdfs:domain aars:Hop ; rdfs:range xsd:dateTime .
+aars:onBehalfOf a owl:ObjectProperty ; rdfs:domain aars:Hop ; rdfs:range prov:Agent ;
+    rdfs:comment "Human principal or organization for this hop (RFC 8693 sub). The executing agent is prov:wasAssociatedWith (RFC 8693 act)."@en .
+
+# Per-hop delegation per RFC 8693: sub = principal (aars:onBehalfOf), act.sub = executing agent.
+aars:actor a owl:ObjectProperty ; rdfs:domain aars:Hop ;
+    rdfs:comment "RFC 8693 act claim as a node. Its aars:actorAgent should equal the hop's prov:wasAssociatedWith (checked in the guard)."@en .
+aars:actorAgent a owl:ObjectProperty ; rdfs:range prov:Agent .
+
+aars:intentDigest a owl:ObjectProperty ; rdfs:domain aars:CallChainTrace ; rdfs:range aars:PayloadDigest .
+aars:mandateDigest a owl:ObjectProperty ; rdfs:domain aars:CallChainTrace ; rdfs:range aars:PayloadDigest ;
+    rdfs:comment "Canonical SHA-256 digest of the edge authorization mandate (e.g. x401 presentation) seeding hop 0."@en .
+aars:mandateRef a owl:ObjectProperty ; rdfs:domain aars:CallChainTrace ;
+    rdfs:comment "Optional URI or URN resolving to the edge authorization mandate or presentation."@en .
+aars:sha256 a owl:DatatypeProperty ; rdfs:domain aars:PayloadDigest ; rdfs:range xsd:hexBinary .
+aars:canonicalization a owl:ObjectProperty ; rdfs:domain aars:PayloadDigest .   # e.g. RDFC-1.0 or JCS (to decide)
+# aars:signature deliberately has no rdfs:domain: it is used on hops, trust attestations and revocation events.
+aars:signature a owl:DatatypeProperty ; rdfs:range xsd:string .
+
+aars:ExecutionEnvelope a owl:Class .
+aars:bounds   a owl:ObjectProperty ; rdfs:domain aars:CallChainTrace ; rdfs:range aars:ExecutionEnvelope .
+aars:envelope a owl:ObjectProperty ; rdfs:domain aars:Hop ; rdfs:range aars:ExecutionEnvelope .
+aars:hopsRemaining a owl:DatatypeProperty ; rdfs:domain aars:ExecutionEnvelope ; rdfs:range xsd:integer ;
+    rdfs:comment "Covers both max_hops_remaining (trace) and max_depth_remaining (hop); the two names should be unified."@en .
+aars:budgetRemainingUsd a owl:DatatypeProperty ; rdfs:domain aars:ExecutionEnvelope ; rdfs:range xsd:decimal .
+aars:recordsAllowed a owl:DatatypeProperty ; rdfs:domain aars:ExecutionEnvelope ; rdfs:range xsd:integer .
+aars:ttl a owl:DatatypeProperty ; rdfs:domain aars:ExecutionEnvelope ; rdfs:range xsd:dateTime .
+
+aars:TrustAttestation a owl:Class ; rdfs:subClassOf prov:Entity .
+aars:trustAttestation a owl:ObjectProperty ; rdfs:domain aars:Hop ; rdfs:range aars:TrustAttestation .
+aars:score a owl:DatatypeProperty ; rdfs:domain aars:TrustAttestation ; rdfs:range xsd:decimal .
+aars:validAt a owl:DatatypeProperty ; rdfs:domain aars:TrustAttestation ; rdfs:range xsd:dateTime .
+
+# ---------------------------------------------------------------
+# Safety events
+# ---------------------------------------------------------------
+aars:RevocationEvent a owl:Class ; rdfs:subClassOf prov:Activity .
+aars:revokes a owl:ObjectProperty ; rdfs:domain aars:RevocationEvent ; rdfs:range aars:CallChainTrace .
+aars:revokedAt a owl:DatatypeProperty ; rdfs:domain aars:RevocationEvent ; rdfs:range xsd:dateTime .
+aars:revocationAuthority a owl:ObjectProperty ; rdfs:domain aars:RevocationEvent ; rdfs:range prov:Agent .
+aars:reason a owl:DatatypeProperty ; rdfs:domain aars:RevocationEvent ; rdfs:range xsd:string .
+
+# ---------------------------------------------------------------
+# Permit to Operate (ADR 0005)
+# ---------------------------------------------------------------
+aars:PermitToOperate a owl:Class ; rdfs:subClassOf prov:Entity ;
+    rdfs:comment "Signed time-bound pass issued for one Registration version. A JWT today, not a VC."@en .
+aars:permitFor a owl:ObjectProperty ;
+    rdfs:domain aars:PermitToOperate ; rdfs:range aars:Registration .
+aars:permitExpires a owl:DatatypeProperty ;
+    rdfs:domain aars:PermitToOperate ; rdfs:range xsd:dateTime .
+aars:permitStatus a owl:ObjectProperty ;
+    rdfs:domain aars:PermitToOperate ; rdfs:range aars:PermitStatus .
+aars:PermitStatus a owl:Class .
+aars:PermitActive  a aars:PermitStatus .
+aars:PermitRevoked a aars:PermitStatus .
+aars:PermitExpired a aars:PermitStatus .
+
+# ---------------------------------------------------------------
+# Supply chain references (bind by digest; do not ingest) (ADR 0004)
+# ---------------------------------------------------------------
+aars:BillOfMaterials a owl:Class ; rdfs:subClassOf prov:Entity .
+aars:hasBom a owl:ObjectProperty ;
+    rdfs:domain aars:Registration ; rdfs:range aars:BillOfMaterials .
+aars:bomFormat   a owl:DatatypeProperty ; rdfs:domain aars:BillOfMaterials ; rdfs:range xsd:string .  # e.g. CycloneDX 1.6
+aars:bomLocation a owl:ObjectProperty   ; rdfs:domain aars:BillOfMaterials .
+aars:bomDigest   a owl:ObjectProperty   ; rdfs:domain aars:BillOfMaterials ; rdfs:range aars:PayloadDigest .
+aars:BuildProvenance a owl:Class ; rdfs:subClassOf prov:Entity .   # points at an SPDX 3.0 Build element
+aars:hasBuildProvenance a owl:ObjectProperty ;
+    rdfs:domain aars:Registration ; rdfs:range aars:BuildProvenance .
+
+# ---------------------------------------------------------------
+# Envelope and sandbox are AIRO controls
+# ---------------------------------------------------------------
+aars:ExecutionEnvelope rdfs:subClassOf airo:Control .
+aars:SandboxProfile a owl:Class ; rdfs:subClassOf airo:Control .
+
+# ---------------------------------------------------------------
+# The risk half of AIRO, for the safety design
+# ---------------------------------------------------------------
+aars:UnboundedDelegation a airo:RiskSource ;
+    airo:isRiskSourceFor aars:RunawayExecution .
+aars:RunawayExecution a airo:Risk ;
+    airo:hasConsequence aars:OrphanedSubAgentSpend .
+aars:OrphanedSubAgentSpend a airo:Consequence .
+aars:CascadingRevocation a airo:Control ;
+    airo:modifiesEvent aars:RunawayExecution .   # TODO verify modifiesEvent vs mitigatesEvent
+
+# ---------------------------------------------------------------
+# General-purpose AI is a separate dimension, not a risk tier (needs legal review)
+# ---------------------------------------------------------------
+aars:gpaiStatus a owl:ObjectProperty ;
+    rdfs:domain aars:Agent ; rdfs:range skos:Concept .
+aars:GpaiScheme a skos:ConceptScheme .
+aars:NotGpai a skos:Concept ; skos:inScheme aars:GpaiScheme .
+aars:Gpai a skos:Concept ; skos:inScheme aars:GpaiScheme .
+aars:GpaiSystemicRisk a skos:Concept ; skos:inScheme aars:GpaiScheme .

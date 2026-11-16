@@ -1,0 +1,119 @@
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix aars:  <https://schema.obquan.com/aars/v1#> .
+@prefix aarsh: <https://schema.obquan.com/aars/v1/shapes#> .
+@prefix airo:  <https://w3id.org/airo#> .
+@prefix airo_uc: <https://w3id.org/AIRO#> .
+@prefix eu-aiact: <https://w3id.org/dpv/legal/eu/aiact#> .
+@prefix prov:  <http://www.w3.org/ns/prov#> .
+@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+<https://schema.obquan.com/aars/v1/shapes> a owl:Ontology ;
+    owl:versionInfo "0.2.0" ;
+    rdfs:comment "W3C SHACL Core validation shapes for AARS registration, execution traces, and revocation."@en ;
+    sh:declare
+      [ sh:prefix "aars" ; sh:namespace "https://schema.obquan.com/aars/v1#"^^xsd:anyURI ] ,
+      [ sh:prefix "airo" ; sh:namespace "https://w3id.org/airo#"^^xsd:anyURI ] ,
+      [ sh:prefix "airo_uc" ; sh:namespace "https://w3id.org/AIRO#"^^xsd:anyURI ] ,
+      [ sh:prefix "eu-aiact" ; sh:namespace "https://w3id.org/dpv/legal/eu/aiact#"^^xsd:anyURI ] ,
+      [ sh:prefix "skos" ; sh:namespace "http://www.w3.org/2004/02/skos/core#"^^xsd:anyURI ] ,
+      [ sh:prefix "rdfs" ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] .
+
+# ---------------- Agent registration ----------------
+aarsh:AgentShape a sh:NodeShape ;
+    sh:targetClass aars:Agent, airo:AISystem, airo_uc:AISystem ;
+    sh:property [ sh:path aars:provider ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
+        sh:message "An agent must name its provider (owning team) by DID."@en ] ;
+    sh:property [
+        sh:path [ sh:alternativePath ( aars:ownershipAttestation ( aars:provider aars:ownershipAttestation ) ) ] ;
+        sh:minCount 1 ;
+        sh:message "An agent or its provider must carry an ownership attestation."@en
+    ] ;
+    sh:property [ sh:path aars:hasIntent ; sh:minCount 1 ; sh:maxCount 1 ; sh:node aarsh:IntentShape ] ;
+    sh:property [ sh:path aars:euAiAct ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path aars:minTrustThreshold ; sh:maxCount 1 ;
+        sh:or ( [ sh:datatype xsd:decimal ] [ sh:datatype xsd:double ] ) ;
+        sh:minInclusive 0 ; sh:maxInclusive 1 ] .
+
+aarsh:IntentShape a sh:NodeShape ;
+    sh:property [ sh:path aars:goalStatement ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path aars:capability ; sh:minCount 1 ] .
+
+# ---------------- EU AI Act declaration ----------------
+aarsh:EuAiActShape a sh:NodeShape ;
+    sh:targetObjectsOf aars:euAiAct ;
+    sh:message "EU AI Act declaration invalid, incomplete for a high-risk system, or a prohibited practice (Art. 5)."@en ;
+    sh:property [ sh:path aars:declaredRiskTier ; sh:minCount 1 ; sh:maxCount 1 ;
+        sh:in ( eu-aiact:RiskLevelHigh eu-aiact:RiskLevelTransparencyRequired eu-aiact:RiskLevelMinimal ) ] ;
+    sh:property [ sh:path aars:killSwitch ; sh:minCount 1 ; sh:node aarsh:KillSwitchShape ] ;
+    sh:or (
+        [ sh:property [ sh:path aars:declaredRiskTier ; sh:minCount 1 ;
+            sh:in ( eu-aiact:RiskLevelTransparencyRequired eu-aiact:RiskLevelMinimal ) ] ]
+        [ sh:node aarsh:HighRiskCompletenessShape ]
+    ) .
+
+# High-Risk Completeness Shape (EU AI Act Annex III)
+aarsh:HighRiskCompletenessShape a sh:NodeShape ;
+    sh:property [ sh:path aars:declaredRiskTier ; sh:minCount 1 ;
+        sh:in ( eu-aiact:RiskLevelHigh ) ] ;
+    sh:property [ sh:path aars:euAiRegId ; sh:minCount 1 ; sh:maxCount 1 ;
+        sh:pattern "^EU-AI-REG-[A-Z0-9]{8,16}$" ] ;
+    sh:property [ sh:path aars:highRiskArea ; sh:minCount 1 ;
+        sh:in ( aars:Biometrics aars:CriticalInfrastructure aars:EducationAndVocationalTraining
+                aars:EmploymentAndWorkersManagement aars:AccessToEssentialServices aars:LawEnforcement
+                aars:MigrationAsylumBorderControl aars:AdministrationOfJusticeAndDemocraticProcesses
+                airo:Biometrics airo:CriticalInfrastructure airo:EmploymentAndWorkersManagement
+                airo_uc:Biometrics airo_uc:CriticalInfrastructure airo_uc:EmploymentAndWorkersManagement ) ] ;
+    sh:property [ sh:path aars:humanOversight ; sh:minCount 1 ] ;
+    sh:property [ sh:path aars:c2paDeclaration ; sh:minCount 1 ] .
+
+aarsh:KillSwitchShape a sh:NodeShape ;
+    sh:property [ sh:path aars:killSwitchSupported ; sh:minCount 1 ; sh:hasValue true ] ;
+    sh:property [ sh:path aars:revocationEndpoint ; sh:nodeKind sh:IRI ] .
+
+# ---------------- Call chain ----------------
+aarsh:TraceShape a sh:NodeShape ;
+    sh:targetClass aars:CallChainTrace ;
+    sh:property [ sh:path aars:intentDigest ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path aars:mandateDigest ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path aars:mandateRef ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path aars:bounds ; sh:minCount 1 ; sh:maxCount 1 ; sh:node aarsh:EnvelopeShape ] ;
+    sh:property [ sh:path aars:hop ; sh:minCount 1 ; sh:node aarsh:HopShape ] .
+
+aarsh:HopShape a sh:NodeShape ;
+    sh:property [ sh:path aars:hopIndex ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path prov:wasAssociatedWith ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path prov:used ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path prov:generated ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path aars:dispatchedAt ; sh:minCount 1 ; sh:datatype xsd:dateTime ] ;
+    sh:property [ sh:path aars:signature ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path aars:envelope ; sh:minCount 1 ; sh:maxCount 1 ; sh:node aarsh:EnvelopeShape ] ;
+    sh:property [ sh:path aars:trustAttestation ; sh:minCount 1 ; sh:maxCount 1 ; sh:node aarsh:TrustShape ] .
+
+aarsh:EnvelopeShape a sh:NodeShape ;
+    sh:property [ sh:path aars:hopsRemaining ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path aars:budgetRemainingUsd ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path aars:ttl ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ] ;
+    sh:property [ sh:path aars:recordsAllowed ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ] .
+
+aarsh:TrustShape a sh:NodeShape ;
+    sh:property [ sh:path aars:score ; sh:minCount 1 ; sh:maxCount 1 ;
+        sh:or ( [ sh:datatype xsd:decimal ] [ sh:datatype xsd:double ] ) ;
+        sh:minInclusive 0 ; sh:maxInclusive 1 ] ;
+    sh:property [ sh:path aars:validAt ; sh:minCount 1 ; sh:datatype xsd:dateTime ] ;
+    sh:property [ sh:path aars:signature ; sh:minCount 1 ] .
+
+# ---------------- Revocation ----------------
+aarsh:RevocationShape a sh:NodeShape ;
+    sh:targetClass aars:RevocationEvent, aars:RevocationVector ;
+    sh:property [
+        sh:path [ sh:alternativePath ( aars:revokes aars:targetTrace ) ] ;
+        sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+        sh:message "A revocation event must identify the trace it revokes."@en
+    ] ;
+    sh:property [ sh:path aars:revokedAt ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ] ;
+    sh:property [ sh:path aars:revocationAuthority ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path aars:reason ; sh:minCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path aars:signature ; sh:minCount 1 ; sh:maxCount 1 ] .
