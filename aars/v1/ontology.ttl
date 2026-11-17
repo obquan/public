@@ -1,5 +1,5 @@
 @prefix aars:    <https://schema.obquan.com/aars/v1#> .
-@prefix airo:    <https://w3id.org/AIRO#> .
+@prefix airo:    <https://w3id.org/airo#> .
 @prefix owl:     <http://www.w3.org/2002/07/owl#> .
 @prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
@@ -192,7 +192,11 @@ aars:HumanOversightAttestation a owl:Class ;
 aars:humanOversight a owl:ObjectProperty ; rdfs:domain aars:EuAiActDeclaration ; rdfs:range aars:HumanOversightAttestation .
 aars:oversightMethod a owl:DatatypeProperty ; rdfs:domain aars:HumanOversightAttestation ; rdfs:range xsd:string .
 aars:supervisor a owl:ObjectProperty ; rdfs:domain aars:HumanOversightAttestation ; rdfs:range prov:Agent .
-aars:attestsMeasure a owl:ObjectProperty ; rdfs:domain aars:HumanOversightAttestation ; rdfs:range airo:HumanOversightMeasure .
+aars:HumanOversightMeasure a owl:Class ;
+    rdfs:label "Human Oversight Measure"@en ;
+    rdfs:comment "Measures ensuring human oversight of autonomous agent decisions."@en .
+
+aars:attestsMeasure a owl:ObjectProperty ; rdfs:domain aars:HumanOversightAttestation ; rdfs:range aars:HumanOversightMeasure .
 
 aars:C2paDeclaration a owl:Class .
 aars:c2paDeclaration a owl:ObjectProperty ; rdfs:domain aars:EuAiActDeclaration ; rdfs:range aars:C2paDeclaration .
@@ -201,8 +205,8 @@ aars:watermarkingAlgorithm a owl:DatatypeProperty ; rdfs:domain aars:C2paDeclara
 aars:manifestBindingMethod a owl:DatatypeProperty ; rdfs:domain aars:C2paDeclaration ; rdfs:range xsd:string .
 
 aars:KillSwitch a owl:Class ;
-    rdfs:subClassOf airo:Control ;
-    rdfs:comment "Control satisfying the EU AI Act stop requirement; active revocation via endpoint, passive via DID state."@en .
+    rdfs:subClassOf airo:RiskControl ;
+    rdfs:comment "Risk control satisfying the EU AI Act stop requirement; active revocation via endpoint, passive via DID state."@en .
 aars:killSwitch a owl:ObjectProperty ; rdfs:domain aars:EuAiActDeclaration ; rdfs:range aars:KillSwitch .
 aars:revocationEndpoint a owl:ObjectProperty ; rdfs:domain aars:KillSwitch .
 aars:killSwitchSupported a owl:DatatypeProperty ; rdfs:domain aars:KillSwitch ; rdfs:range xsd:boolean .
@@ -210,7 +214,7 @@ aars:killSwitchSupported a owl:DatatypeProperty ; rdfs:domain aars:KillSwitch ; 
 # ---------------------------------------------------------------
 # Concept schemes & DPVCG EU AI Act Risk Levels (arXiv:2610.31380 / ADR 0007)
 # ---------------------------------------------------------------
-# aars:RiskTierScheme and fictional terms (airo:HighRisk, airo:LimitedRisk)
+# aars:RiskTierScheme and legacy informal risk tier terms
 # are deprecated and superseded by canonical concepts from https://w3id.org/dpv/legal/eu/aiact#:
 #   - eu-aiact:RiskLevelProhibited (Article 5)
 #   - eu-aiact:RiskLevelHigh (Article 6 / Annex III)
@@ -238,11 +242,6 @@ aars:LawEnforcement a skos:Concept ; skos:inScheme aars:AnnexIIIAreaScheme .
 aars:MigrationAsylumBorderControl a skos:Concept ; skos:inScheme aars:AnnexIIIAreaScheme .
 aars:AdministrationOfJusticeAndDemocraticProcesses a skos:Concept ; skos:inScheme aars:AnnexIIIAreaScheme .
 
-# SPECIFICATION.md 4.5 names these three areas as airo: terms. TODO verify they exist in AIRO.
-aars:Biometrics skos:exactMatch airo:Biometrics .
-aars:EmploymentAndWorkersManagement skos:exactMatch airo:EmploymentAndWorkersManagement .
-aars:CriticalInfrastructure skos:exactMatch airo:CriticalInfrastructure .
-
 aars:BreachBehavior a owl:Class .
 aars:FailClosed         a aars:BreachBehavior .
 aars:DegradeToReadOnly  a aars:BreachBehavior .
@@ -263,19 +262,27 @@ aars:COPPA a skos:Concept ; skos:inScheme aars:StandardScheme .
 # ---------------------------------------------------------------
 # Mapping from AIRO system profile to Annex III areas (data, not code)
 # ---------------------------------------------------------------
+aars:BiometricIdentification a owl:Class ;
+    rdfs:subClassOf airo:Purpose ;
+    rdfs:label "Biometric Identification Purpose"@en .
+
+aars:AssessingRiskOfReoffending a owl:Class ;
+    rdfs:subClassOf airo:Purpose ;
+    rdfs:label "Assessing Risk Of Reoffending Purpose"@en .
+
 aars:AnnexIIIMapping a owl:Class ;
     rdfs:comment "One rule: a system purpose class implies an Annex III area. Used to derive the risk tier."@en .
 aars:matchesPurposeClass a owl:ObjectProperty ; rdfs:domain aars:AnnexIIIMapping .
 aars:impliesArea a owl:ObjectProperty ; rdfs:domain aars:AnnexIIIMapping ; rdfs:range skos:Concept .
 
 aars:Mapping-Biometric a aars:AnnexIIIMapping ;
-    aars:matchesPurposeClass airo:BiometricIdentification ;   # class named in the AIRO paper
+    aars:matchesPurposeClass aars:BiometricIdentification ;
     aars:impliesArea aars:Biometrics ;
     rdfs:comment "Annex III point 1 (biometrics)."@en .
 aars:Mapping-Reoffending a aars:AnnexIIIMapping ;
-    aars:matchesPurposeClass airo:AssessingRiskOfReoffending ; # class named in the AIRO paper
+    aars:matchesPurposeClass aars:AssessingRiskOfReoffending ;
     aars:impliesArea aars:LawEnforcement ;
-    rdfs:comment "Annex III point 6 (law enforcement). Annex numbering in the paper follows the 2021 proposal; confirm against Regulation (EU) 2024/1689."@en .
+    rdfs:comment "Annex III point 6 (law enforcement)."@en .
 
 # ---------------------------------------------------------------
 # Provenance, traces and delegation
@@ -361,8 +368,8 @@ aars:hasBuildProvenance a owl:ObjectProperty ;
 # ---------------------------------------------------------------
 # Envelope and sandbox are AIRO controls
 # ---------------------------------------------------------------
-aars:ExecutionEnvelope rdfs:subClassOf airo:Control .
-aars:SandboxProfile a owl:Class ; rdfs:subClassOf airo:Control .
+aars:ExecutionEnvelope rdfs:subClassOf airo:RiskControl .
+aars:SandboxProfile a owl:Class ; rdfs:subClassOf airo:RiskControl .
 
 # ---------------------------------------------------------------
 # The risk half of AIRO, for the safety design
@@ -372,8 +379,8 @@ aars:UnboundedDelegation a airo:RiskSource ;
 aars:RunawayExecution a airo:Risk ;
     airo:hasConsequence aars:OrphanedSubAgentSpend .
 aars:OrphanedSubAgentSpend a airo:Consequence .
-aars:CascadingRevocation a airo:Control ;
-    airo:modifiesEvent aars:RunawayExecution .   # TODO verify modifiesEvent vs mitigatesEvent
+aars:CascadingRevocation a airo:RiskControl ;
+    airo:mitigatesRiskConcept aars:RunawayExecution .
 
 # ---------------------------------------------------------------
 # General-purpose AI is a separate dimension, not a risk tier (needs legal review)

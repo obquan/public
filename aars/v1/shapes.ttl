@@ -63,9 +63,7 @@ aarsh:HighRiskCompletenessShape a sh:NodeShape ;
     sh:property [ sh:path aars:highRiskArea ; sh:minCount 1 ;
         sh:in ( aars:Biometrics aars:CriticalInfrastructure aars:EducationAndVocationalTraining
                 aars:EmploymentAndWorkersManagement aars:AccessToEssentialServices aars:LawEnforcement
-                aars:MigrationAsylumBorderControl aars:AdministrationOfJusticeAndDemocraticProcesses
-                airo:Biometrics airo:CriticalInfrastructure airo:EmploymentAndWorkersManagement
-                airo_uc:Biometrics airo_uc:CriticalInfrastructure airo_uc:EmploymentAndWorkersManagement ) ] ;
+                aars:MigrationAsylumBorderControl aars:AdministrationOfJusticeAndDemocraticProcesses ) ] ;
     sh:property [ sh:path aars:humanOversight ; sh:minCount 1 ] ;
     sh:property [ sh:path aars:c2paDeclaration ; sh:minCount 1 ] .
 

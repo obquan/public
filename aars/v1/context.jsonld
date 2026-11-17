@@ -45,9 +45,9 @@
     "purpose": { "@id": "airo:hasPurpose", "@type": "@id" },
     "domain": { "@id": "airo:isAppliedWithinDomain", "@type": "@id" },
     "technique": { "@id": "airo:usesTechnique", "@type": "@id" },
-    "user": { "@id": "airo:isUsedBy", "@type": "@id" },
-    "subject": { "@id": "airo:affects", "@type": "@id" },
-    "environment": { "@id": "airo:isUsedInEnvironment", "@type": "@id" },
+    "user": { "@id": "airo:hasAIUser", "@type": "@id" },
+    "subject": { "@id": "airo:hasAISubject", "@type": "@id" },
+    "environment": { "@id": "airo:isUsedWithinLocality", "@type": "@id" },
 
     "intent": "aars:hasIntent",
     "goal_statement": "aars:goalStatement",
