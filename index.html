@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Obquan Schemas &amp; Ontologies</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --code-bg: #f3f4f6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --fg: #f8fafc;
+        --muted: #94a3b8;
+        --border: #1e293b;
+        --accent: #60a5fa;
+        --code-bg: #1e293b;
+      }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+      max-width: 720px;
+      margin: 4rem auto;
+      padding: 0 1.5rem;
+    }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    .subtitle { color: var(--muted); margin-top: 0; margin-bottom: 2.5rem; }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 { margin-top: 0; font-size: 1.2rem; }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background: var(--code-bg);
+      color: var(--accent);
+      vertical-align: middle;
+      margin-left: 0.5rem;
+    }
+    pre {
+      background: var(--code-bg);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 0.875rem;
+    }
+    ul { padding-left: 1.25rem; margin-bottom: 0; }
+    li { margin: 0.4rem 0; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <h1>Obquan Schemas</h1>
+  <p class="subtitle">Public RDF vocabularies, ontologies, and JSON-LD contexts maintained by Obquan.</p>
+
+  <section class="card">
+    <h2>AI Agent Registry Service (AARS) <span class="badge">v1</span></h2>
+    <p>Core vocabulary for describing, indexing, and discovering AI agents within the Obquan registry ecosystem.</p>
+
+    <pre><code>@prefix aars: &lt;https://schema.obquan.com/aars/v1#&gt; .</code></pre>
+
+    <ul>
+      <li><strong>Documentation (HTML):</strong> <a href="/aars/v1/">/aars/v1/</a></li>
+      <li><strong>Ontology (Turtle):</strong> <a href="/aars/v1/aars.ttl">/aars/v1/aars.ttl</a></li>
+      <li><strong>JSON-LD Context:</strong> <a href="/aars/v1/context.jsonld">/aars/v1/context.jsonld</a></li>
+    </ul>
+  </section>
+
+  <footer>
+    Hosted at <code>schema.obquan.com</code> &middot; <a href="https://obquan.com">obquan.com</a>
+  </footer>
+</body>
+</html>
