@@ -64,6 +64,32 @@ aars:OwnershipAttestation a owl:Class ;
 aars:ownershipAttestation a owl:ObjectProperty ;
     rdfs:domain aars:Agent ; rdfs:range aars:OwnershipAttestation .
 
+aars:GovernanceAttestation a owl:Class ;
+    rdfs:subClassOf vc:VerifiableCredential ;
+    rdfs:comment "Multi-party governance attestation supporting dual engineering and business signoff keys."@en .
+aars:governanceAttestation a owl:ObjectProperty ;
+    rdfs:comment "Multi-party governance attestation linked to the provider or agent."@en ;
+    rdfs:range aars:GovernanceAttestation .
+
+aars:engineeringSignoffKey a owl:DatatypeProperty ;
+    rdfs:domain aars:GovernanceAttestation ; rdfs:range xsd:string ;
+    rdfs:comment "Cryptographic signoff key or JWS from technical lead/engineering authority."@en .
+aars:businessSignoffKey a owl:DatatypeProperty ;
+    rdfs:domain aars:GovernanceAttestation ; rdfs:range xsd:string ;
+    rdfs:comment "Cryptographic signoff key or JWS from business risk/compliance officer."@en .
+aars:certificationExpires a owl:DatatypeProperty ;
+    rdfs:domain aars:GovernanceAttestation ; rdfs:range xsd:dateTime ;
+    rdfs:comment "ISO 8601 timestamp after which multi-party governance attestation expires."@en .
+
+aars:AgentCommunicationService a owl:Class ;
+    rdfs:label "Agent Communication Service"@en ;
+    rdfs:comment "Service endpoint descriptor for inter-agent communication."@en .
+
+aars:EUAIActComplianceCredential a owl:Class ;
+    rdfs:subClassOf vc:VerifiableCredential ;
+    rdfs:label "EU AI Act Compliance Credential"@en ;
+    rdfs:comment "Verifiable credential certifying statutory compliance under the EU AI Act."@en .
+
 aars:contactEmail a owl:DatatypeProperty ; rdfs:range xsd:string .
 aars:apiEndpoint       a owl:ObjectProperty ; rdfs:domain aars:Agent .
 aars:websocketEndpoint a owl:ObjectProperty ; rdfs:domain aars:Agent .
